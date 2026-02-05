@@ -62,9 +62,9 @@ export async function deleteReview(id: string) {
 
 // Create a review (from public form)
 export async function createReview(formData: FormData) {
-    const appSlug = formData.get('appSlug') as string || null
+    const appSlug = formData.get('appSlug') as string
     const author = formData.get('author') as string
-    const email = formData.get('email') as string || null
+    const email = (formData.get('email') as string) || undefined
     const content = formData.get('content') as string
     const rating = parseInt(formData.get('rating') as string) || 5
 

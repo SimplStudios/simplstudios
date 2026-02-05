@@ -112,6 +112,21 @@ model PostLike {
   @@map("post_likes")
 }
 
+// Homepage banner announcements
+model Announcement {
+  id        String    @id @default(cuid())
+  title     String
+  content   String
+  type      String    @default("info") // info, warning, success, release
+  priority  Int       @default(0)
+  active    Boolean   @default(true)
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("announcements")
+}
+
 // User reviews for apps with ratings
 model Review {
   id            String    @id @default(cuid())

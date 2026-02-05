@@ -46,7 +46,7 @@ export interface Post {
   id: string
   title: string
   content: string
-  type: 'announcement' | 'update' | 'release' | 'news'
+  type: string
   imageUrl?: string | null
   pinned: boolean
   createdAt: Date
@@ -74,6 +74,19 @@ export interface PostLike {
   postId: string
   sessionId: string
   createdAt: Date
+}
+
+// Announcement type for banner announcements
+export interface Announcement {
+  id: string
+  title: string
+  content: string
+  type: string
+  priority: number
+  active: boolean
+  expiresAt: Date | null
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Review type from database (with admin response)

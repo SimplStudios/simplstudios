@@ -15,6 +15,7 @@ interface PostCardProps {
             likes: number
         }
     }
+    hasLiked?: boolean
     onLike?: (postId: string) => void
     onToggleComments?: (postId: string) => void
     showComments?: boolean
