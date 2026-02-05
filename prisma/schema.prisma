@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model App {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  tagline     String
+  description String
+  icon        String
+  color       String   @default("blue")
+  screenshots String[]
+  features    String[]
+  status      String   @default("live")
+  url         String?
+  platforms   String[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  reviews     Review[]
+
+  @@map("apps")
+}
+
+model Update {
+  id        String   @id @default(cuid())
+  appSlug   String   @map("app_slug")
+  title     String
+  content   String
+  version   String?
+  type      String   @default("update")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("updates")
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  appSlug   String?  @map("app_slug")
+  author    String
+  role      String?
+  avatar    String?
+  content   String
+  rating    Int      @default(5)
+  featured  Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("testimonials")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("admin")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}
+
+// Message Board Posts (replaces Announcements)
+model Post {
+  id        String    @id @default(cuid())
+  title     String
+  content   String
+  type      String    @default("announcement") // announcement, update, release, news
+  imageUrl  String?   @map("image_url") // Optional attached image
+  pinned    Boolean   @default(false)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  comments  Comment[]
+  likes     PostLike[]
+
+  @@map("posts")
+}
+
+// Comments on message board posts
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String   @map("post_id")
+  author    String
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+// Like tracking for posts (anonymous via session)
+model PostLike {
+  id        String   @id @default(cuid())
+  postId    String   @map("post_id")
+  sessionId String   @map("session_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, sessionId])
+  @@map("post_likes")
+}
+
+// User reviews for apps with ratings
+model Review {
+  id            String    @id @default(cuid())
+  appSlug       String    @map("app_slug")
+  author        String
+  email         String?
+  content       String
+  rating        Int       @default(5)
+  approved      Boolean   @default(false)
+  featured      Boolean   @default(false)
+  adminResponse String?   @map("admin_response")
+  respondedAt   DateTime? @map("responded_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  app           App       @relation(fields: [appSlug], references: [slug], onDelete: Cascade)
+
+  @@map("reviews")
+}
