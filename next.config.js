@@ -12,6 +12,8 @@ const nextConfig = {
       },
     ],
   },
+  // Fix for multiple lockfile detection
+  outputFileTracingRoot: __dirname,
 }
 
 module.exports = nextConfig
