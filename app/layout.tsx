@@ -34,6 +34,14 @@ export const metadata: Metadata = {
   keywords: ['SimplStudios', 'SimplStudy', 'SimplStream', 'student apps', 'streaming', 'study tools'],
   authors: [{ name: 'SimplStudios' }],
   creator: 'SimplStudios',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
+  verification: {
+    google: 'LYhU1pYARLxsgcZu0rmJr2LeP4IFe-ZRMMl4cvaQKXc',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
