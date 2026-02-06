@@ -7,7 +7,7 @@ import { ArrowLeft, Plus, Image, Info } from 'lucide-react'
 import { createPost } from '@/app/actions/posts'
 
 export default async function NewPostPage() {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {

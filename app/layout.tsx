@@ -25,6 +25,7 @@ const rubik = Rubik({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://simplstudios.vercel.app'),
   title: {
     default: 'SimplStudios - Building Apps That Matter',
     template: '%s | SimplStudios',
@@ -61,12 +62,12 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
   return (

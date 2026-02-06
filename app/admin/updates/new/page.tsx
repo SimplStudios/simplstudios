@@ -15,7 +15,7 @@ async function getApps() {
 }
 
 export default async function NewUpdatePage() {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {

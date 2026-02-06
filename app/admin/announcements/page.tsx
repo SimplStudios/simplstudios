@@ -15,7 +15,7 @@ async function getAnnouncements() {
 }
 
 export default async function AnnouncementsAdminPage() {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {

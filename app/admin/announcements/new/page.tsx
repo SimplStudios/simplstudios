@@ -7,7 +7,7 @@ import { ArrowLeft, Plus } from 'lucide-react'
 import { createAnnouncement } from '@/app/actions/announcements'
 
 export default async function NewAnnouncementPage() {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {

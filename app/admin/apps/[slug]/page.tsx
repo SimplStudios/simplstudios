@@ -8,8 +8,9 @@ import { ArrowLeft, Save, Trash2 } from 'lucide-react'
 import { updateApp, deleteApp } from '@/app/actions/apps'
 import { revalidatePath } from 'next/cache'
 
-export default async function EditAppPage({ params }: { params: { slug: string } }) {
-    const cookieStore = cookies()
+export default async function EditAppPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params
+    const cookieStore = await cookies()
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {
@@ -17,7 +18,7 @@ export default async function EditAppPage({ params }: { params: { slug: string }
     }
 
     const app = await prisma.app.findUnique({
-        where: { slug: params.slug }
+        where: { slug }
     })
 
     if (!app) return <div className="min-h-screen bg-slate-950 py-24 flex items-center justify-center text-white">App not found</div>

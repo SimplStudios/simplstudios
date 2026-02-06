@@ -4,11 +4,12 @@ import { NextRequest, NextResponse } from 'next/server'
 // GET - Get approved reviews for an app with stats
 export async function GET(
     request: NextRequest,
-    { params }: { params: { slug: string } }
+    { params }: { params: Promise<{ slug: string }> }
 ) {
     try {
+        const { slug } = await params
         const reviews = await prisma.review.findMany({
-            where: { appSlug: params.slug, approved: true },
+            where: { appSlug: slug, approved: true },
             orderBy: { createdAt: 'desc' }
         })
 
@@ -39,9 +40,10 @@ export async function GET(
 // POST - Submit a new review for an app
 export async function POST(
     request: NextRequest,
-    { params }: { params: { slug: string } }
+    { params }: { params: Promise<{ slug: string }> }
 ) {
     try {
+        const { slug } = await params
         const body = await request.json()
         const { author, email, content, rating = 5 } = body
 
@@ -54,7 +56,7 @@ export async function POST(
 
         const review = await prisma.review.create({
             data: {
-                appSlug: params.slug,
+                appSlug: slug,
                 author,
                 email: email || null,
                 content,

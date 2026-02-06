@@ -14,7 +14,7 @@ import type { Metadata } from 'next'
 import type { Review } from '@/lib/types'
 
 interface AppPageProps {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 async function getApp(slug: string) {
@@ -61,7 +61,8 @@ async function getAppReviews(slug: string) {
 }
 
 export async function generateMetadata({ params }: AppPageProps): Promise<Metadata> {
-  const app = await getApp(params.slug)
+  const { slug } = await params
+  const app = await getApp(slug)
   if (!app) return { title: 'App Not Found' }
 
   return {
@@ -75,11 +76,12 @@ export async function generateMetadata({ params }: AppPageProps): Promise<Metada
 }
 
 export default async function AppPage({ params }: AppPageProps) {
+  const { slug } = await params
   const [app, updates, testimonials, reviewsData] = await Promise.all([
-    getApp(params.slug),
-    getAppUpdates(params.slug),
-    getAppTestimonials(params.slug),
-    getAppReviews(params.slug),
+    getApp(slug),
+    getAppUpdates(slug),
+    getAppTestimonials(slug),
+    getAppReviews(slug),
   ])
 
   if (!app) {

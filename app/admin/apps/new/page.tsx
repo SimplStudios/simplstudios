@@ -8,7 +8,7 @@ import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react'
 import { createApp } from '@/app/actions/apps'
 
 export default async function NewAppPage() {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {

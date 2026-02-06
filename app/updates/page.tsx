@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 }
 
 interface UpdatesPageProps {
-  searchParams: { app?: string }
+  searchParams: Promise<{ app?: string }>
 }
 
 async function getUpdates(appSlug?: string) {
@@ -30,12 +30,13 @@ async function getApps() {
 }
 
 export default async function UpdatesPage({ searchParams }: UpdatesPageProps) {
+  const { app: appSlug } = await searchParams
   const [updates, apps] = await Promise.all([
-    getUpdates(searchParams.app),
+    getUpdates(appSlug),
     getApps(),
   ])
 
-  const selectedApp = apps.find((app) => app.slug === searchParams.app)
+  const selectedApp = apps.find((app) => app.slug === appSlug)
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -64,7 +65,7 @@ export default async function UpdatesPage({ searchParams }: UpdatesPageProps) {
           <div className="flex flex-wrap gap-3 justify-center">
             <Link href="/updates">
               <div
-                className={`flex items-center px-5 py-2.5 rounded-xl border transition-all duration-200 ${!searchParams.app
+                className={`flex items-center px-5 py-2.5 rounded-xl border transition-all duration-200 ${!appSlug
                   ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25'
                   : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white'
                   }`}
@@ -75,7 +76,7 @@ export default async function UpdatesPage({ searchParams }: UpdatesPageProps) {
             {apps.map((app) => (
               <Link key={app.slug} href={`/updates?app=${app.slug}`}>
                 <div
-                  className={`flex items-center gap-3 px-5 py-2.5 rounded-xl border transition-all duration-200 ${searchParams.app === app.slug
+                  className={`flex items-center gap-3 px-5 py-2.5 rounded-xl border transition-all duration-200 ${appSlug === app.slug
                     ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25'
                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white'
                     }`}

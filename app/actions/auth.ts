@@ -45,7 +45,8 @@ export async function login(prevState: any, formData: FormData) {
 
         // 5. Session Errors
         try {
-            cookies().set('admin_session', 'true', {
+            const cookieStore = await cookies()
+            cookieStore.set('admin_session', 'true', {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 maxAge: 60 * 60 * 24, // 1 day
@@ -85,6 +86,7 @@ export async function login(prevState: any, formData: FormData) {
 }
 
 export async function logout() {
-    cookies().delete('admin_session')
+    const cookieStore = await cookies()
+    cookieStore.delete('admin_session')
     redirect('/login')
 }

@@ -9,7 +9,7 @@ import { ArrowLeft, Plus, Edit, Trash2, Pin, MessageCircle, Heart, Megaphone } f
 import { deletePost, togglePinPost } from '@/app/actions/posts'
 
 export default async function AdminPostsPage() {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {
