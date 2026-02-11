@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight, Sparkles, Heart } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
@@ -44,8 +44,13 @@ export function Hero() {
             </span>
           </h1>
 
+          {/* Slogan */}
+          <p className="mt-6 text-2xl md:text-3xl text-blue-400 font-outfit italic">
+            "Life is hard, keep it Simpl."
+          </p>
+
           {/* Subtitle */}
-          <p className="mt-4 text-xl md:text-2xl text-slate-400 font-jakarta max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-4 text-lg md:text-xl text-slate-400 font-jakarta max-w-2xl mx-auto leading-relaxed">
             Building apps that matter. We create simple, powerful tools designed by students, <span className="text-slate-300">for everyone.</span>
           </p>
 
@@ -61,6 +66,12 @@ export function Hero() {
               <Link href="/about">
                 Learn More
               </Link>
+            </Button>
+            <Button asChild size="lg" className="rounded-xl text-base px-8 h-14 bg-green-600 hover:bg-green-700 shadow-xl shadow-green-600/20 hover:shadow-green-600/40 transition-all hover:scale-105">
+              <a href="https://cash.app/$simplstudiosofficial" target="_blank" rel="noopener noreferrer">
+                <Heart className="mr-2 w-5 h-5" />
+                Support Us
+              </a>
             </Button>
           </div>
 

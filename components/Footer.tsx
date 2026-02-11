@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Github, Twitter, Mail } from 'lucide-react'
+import { Github, Twitter, Mail, Heart } from 'lucide-react'
 import { CareersModal } from '@/components/CareersModal'
 
 export function Footer() {
@@ -15,10 +15,13 @@ export function Footer() {
                 <span className="text-white">Studios</span>
               </span>
             </Link>
-            <p className="mt-6 text-slate-400 font-jakarta max-w-sm leading-relaxed">
+            <p className="mt-4 text-lg text-blue-400 font-outfit italic">
+              "Life is hard, keep it Simpl."
+            </p>
+            <p className="mt-4 text-slate-400 font-jakarta max-w-sm leading-relaxed">
               Building apps that matter. Student-built software designed to make life simpler, more productive, and enjoyable.
             </p>
-            <div className="mt-8 flex gap-5">
+            <div className="mt-8 flex gap-5 items-center">
               <a
                 href="https://github.com"
                 target="_blank"
@@ -43,6 +46,15 @@ export function Footer() {
               >
                 <Mail className="h-6 w-6" />
                 <span className="sr-only">Email</span>
+              </a>
+              <a
+                href="https://cash.app/$simplstudiosofficial"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-2 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-all hover:scale-105 shadow-lg shadow-green-600/25"
+              >
+                <Heart className="h-4 w-4" />
+                Donate
               </a>
             </div>
           </div>

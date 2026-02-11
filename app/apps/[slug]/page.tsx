@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { ArrowLeft, ExternalLink, Check, ArrowRight } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Check, ArrowRight, Heart } from 'lucide-react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import type { Review } from '@/lib/types'
@@ -162,6 +162,12 @@ export default async function AppPage({ params }: AppPageProps) {
                   <Link href="#features">
                     View Features
                   </Link>
+                </Button>
+                <Button asChild size="lg" className="bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/25">
+                  <a href="https://cash.app/$simplstudiosofficial" target="_blank" rel="noopener noreferrer">
+                    <Heart className="mr-2 w-4 h-4" />
+                    Donate
+                  </a>
                 </Button>
               </div>
             </div>

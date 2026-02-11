@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Heart, Rocket, Code2, Users, Calendar, ArrowRight, Github, Twitter, Mail } from 'lucide-react'
+import { Heart, Rocket, Code2, Users, Calendar, ArrowRight, Github, Twitter, Mail, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
@@ -270,6 +270,12 @@ export default function AboutPage() {
               <a href="mailto:hello@simplstudios.com">
                 <Mail className="mr-2 w-5 h-5" />
                 Email Us
+              </a>
+            </Button>
+            <Button asChild size="lg" className="rounded-xl h-14 px-8 bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/25">
+              <a href="https://cash.app/$simplstudiosofficial" target="_blank" rel="noopener noreferrer">
+                <Heart className="mr-2 w-5 h-5" />
+                Support Us
               </a>
             </Button>
           </div>
