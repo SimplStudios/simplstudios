@@ -17,7 +17,8 @@ import {
     getAuditLogs, getBannedIPs, unbanIP, banIP,
     getAdminChatMessages, sendAdminChatMessage,
     getConnectedDatabases, addConnectedDatabase, refreshUserCount, getTotalUsersAcrossApps,
-    getKeygenLocks, unlockKeygenIP, getVaultEvents, getUsedVaultKeys
+    getKeygenLocks, unlockKeygenIP, getVaultEvents, getUsedVaultKeys,
+    runVaultMigration
 } from '@/app/actions/vault'
 
 // Type definitions for Vault models
@@ -107,6 +108,15 @@ interface UsedVaultKey {
     usedAt: Date
 }
 
+// Helper to safely fetch data with fallback
+async function safeGetData<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+    try {
+        return await fn()
+    } catch (e) {
+        return fallback
+    }
+}
+
 export default async function VaultPage() {
     const cookieStore = await cookies()
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
@@ -115,17 +125,22 @@ export default async function VaultPage() {
         notFound()
     }
 
+    // Auto-migrate vault tables if they don't exist
+    await runVaultMigration()
+
+    // Try to fetch data, fallback to empty arrays if tables don't exist
     const [credentials, auditLogs, bannedIPs, chatMessages, connectedDbs, userStats, keygenLocks, vaultEvents, usedKeys] = await Promise.all([
-        getCredentials() as Promise<VaultCredential[]>,
-        getAuditLogs(50) as Promise<AuditLog[]>,
-        getBannedIPs() as Promise<BannedIP[]>,
-        getAdminChatMessages() as Promise<AdminChatMessage[]>,
-        getConnectedDatabases() as Promise<ConnectedDatabase[]>,
-        getTotalUsersAcrossApps(),
-        getKeygenLocks() as Promise<KeygenLock[]>,
-        getVaultEvents(30) as Promise<VaultEvent[]>,
-        getUsedVaultKeys(10) as Promise<UsedVaultKey[]>
+        safeGetData(() => getCredentials() as Promise<VaultCredential[]>, []),
+        safeGetData(() => getAuditLogs(50) as Promise<AuditLog[]>, []),
+        safeGetData(() => getBannedIPs() as Promise<BannedIP[]>, []),
+        safeGetData(() => getAdminChatMessages() as Promise<AdminChatMessage[]>, []),
+        safeGetData(() => getConnectedDatabases() as Promise<ConnectedDatabase[]>, []),
+        safeGetData(() => getTotalUsersAcrossApps(), { total: 0, databases: [] }),
+        safeGetData(() => getKeygenLocks() as Promise<KeygenLock[]>, []),
+        safeGetData(() => getVaultEvents(30) as Promise<VaultEvent[]>, []),
+        safeGetData(() => getUsedVaultKeys(10) as Promise<UsedVaultKey[]>, [])
     ])
+
 
     return (
         <VaultWrapper>
