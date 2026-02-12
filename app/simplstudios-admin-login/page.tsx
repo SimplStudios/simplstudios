@@ -183,8 +183,9 @@ export default function SecureAdminLoginPage() {
         )
     }
 
-    // Show lockout screen
-    if (state?.locked) {
+    // Show lockout screen (unless bypass param is present)
+    const hasBypass = searchParams.get('bypass') === 'simplstudios-emergency-2026'
+    if (state?.locked && !hasBypass) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/20 via-slate-950 to-slate-950" />
@@ -225,6 +226,10 @@ export default function SecureAdminLoginPage() {
                 </div>
 
                 <form action={formAction} className="space-y-5">
+                    {/* Emergency bypass - add ?bypass=simplstudios-emergency-2026 to URL */}
+                    {searchParams.get('bypass') && (
+                        <input type="hidden" name="bypass" value={searchParams.get('bypass') || ''} />
+                    )}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-400 font-jakarta ml-1">Username</label>
                         <input
