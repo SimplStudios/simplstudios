@@ -3,7 +3,6 @@ import { Outfit, Plus_Jakarta_Sans, Rubik } from 'next/font/google'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { ThemeProvider } from '@/components/theme-provider'
-import { cookies } from 'next/headers'
 import './globals.css'
 
 const outfit = Outfit({
@@ -75,9 +74,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = await cookies()
-  const isAdmin = cookieStore.get('admin_session')?.value === 'true'
-
   return (
     <html lang="en" className={`${outfit.variable} ${jakarta.variable} ${rubik.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-slate-950 font-jakarta">
@@ -87,7 +83,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar isAdmin={isAdmin} />
+          <Navbar />
           <main className="pt-16">{children}</main>
           <Footer />
         </ThemeProvider>
