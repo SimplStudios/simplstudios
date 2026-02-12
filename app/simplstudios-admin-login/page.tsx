@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Shield, AlertTriangle } from 'lucide-react'
@@ -106,6 +107,17 @@ export default function SecureAdminLoginPage() {
     const [state, formAction] = useActionState(secureLogin, initialState)
     const devToolsOpen = useDevToolsDetection()
     const [mounted, setMounted] = useState(false)
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    
+    // Secret URL unlock: /simplstudios-admin-login?unlock=admin
+    useEffect(() => {
+        if (searchParams.get('unlock') === 'admin') {
+            clearLockout().then(() => {
+                router.replace('/simplstudios-admin-login')
+            })
+        }
+    }, [searchParams, router])
     
     // Secret reset sequence for lockout (type "RESET")
     const [keySequence, setKeySequence] = useState<string[]>([])
