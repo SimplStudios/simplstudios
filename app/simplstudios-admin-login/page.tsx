@@ -1,11 +1,11 @@
 'use client'
 
 import { useActionState } from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Shield, AlertTriangle } from 'lucide-react'
-import { secureLogin } from '@/app/actions/auth'
+import { secureLogin, clearLockout } from '@/app/actions/auth'
 
 const initialState = {
     error: '',
@@ -106,6 +106,34 @@ export default function SecureAdminLoginPage() {
     const [state, formAction] = useActionState(secureLogin, initialState)
     const devToolsOpen = useDevToolsDetection()
     const [mounted, setMounted] = useState(false)
+    
+    // Secret reset sequence for lockout (type "RESET")
+    const [keySequence, setKeySequence] = useState<string[]>([])
+    const [resetTriggered, setResetTriggered] = useState(false)
+    
+    const handleSecretReset = useCallback(async () => {
+        await clearLockout()
+        setResetTriggered(true)
+        setTimeout(() => window.location.reload(), 500)
+    }, [])
+    
+    useEffect(() => {
+        if (!state?.locked) return
+        
+        const handleKeyPress = (e: KeyboardEvent) => {
+            const key = e.key.toUpperCase()
+            setKeySequence(prev => {
+                const newSeq = [...prev, key].slice(-5)
+                if (newSeq.join('') === 'RESET') {
+                    handleSecretReset()
+                }
+                return newSeq
+            })
+        }
+        
+        window.addEventListener('keydown', handleKeyPress)
+        return () => window.removeEventListener('keydown', handleKeyPress)
+    }, [state?.locked, handleSecretReset])
 
     useEffect(() => {
         setMounted(true)
@@ -153,7 +181,9 @@ export default function SecureAdminLoginPage() {
                         <div className="inline-flex items-center justify-center w-16 h-16 bg-red-600/20 rounded-2xl mb-6 border border-red-600/30">
                             <AlertTriangle className="w-8 h-8 text-red-400" />
                         </div>
-                        <h1 className="text-2xl font-bold font-outfit text-red-400 mb-2">Access Locked</h1>
+                        <h1 className="text-2xl font-bold font-outfit text-red-400 mb-2">
+                            {resetTriggered ? 'Resetting...' : 'Access Locked'}
+                        </h1>
                         <p className="text-slate-400 font-jakarta">
                             Too many failed attempts. Access has been temporarily disabled.
                         </p>

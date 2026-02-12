@@ -108,6 +108,13 @@ async function getClientIP() {
     return forwarded?.split(',')[0] || realIp || 'unknown'
 }
 
+// Clear lockout cookies (secret admin reset)
+export async function clearLockout() {
+    const cookieStore = await cookies()
+    cookieStore.delete('admin_lock')
+    cookieStore.delete('admin_attempts')
+}
+
 export async function secureLogin(prevState: any, formData: FormData) {
     const username = formData.get('username') as string
     const password = formData.get('password') as string
