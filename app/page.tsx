@@ -23,10 +23,17 @@ async function getPosts() {
 
 async function getApps() {
   const apps = await prisma.app.findMany({
-    orderBy: { createdAt: 'asc' },
+    orderBy: [
+      { pinned: 'desc' },
+      { pinnedOrder: 'asc' },
+      { createdAt: 'asc' },
+    ],
   })
   return apps
 }
+
+// Revalidate every 60 seconds so new apps show up
+export const revalidate = 60
 
 async function getTestimonials() {
   const testimonials = await prisma.testimonial.findMany({

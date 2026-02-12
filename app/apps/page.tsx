@@ -19,6 +19,9 @@ async function getApps() {
   return apps
 }
 
+// Revalidate every 60 seconds so new apps show up
+export const revalidate = 60
+
 export default async function AppsPage() {
   const apps = await getApps()
 
