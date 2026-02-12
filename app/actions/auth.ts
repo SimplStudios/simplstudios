@@ -108,55 +108,57 @@ async function getClientIP() {
     return forwarded?.split(',')[0] || realIp || 'unknown'
 }
 
-// Clear lockout cookies (secret admin reset)
-export async function clearLockout() {
+// Clear lockout - requires admin password for security
+export async function clearLockout(password: string) {
+    if (password !== ADMIN_PASSWORD) {
+        return { error: 'Invalid password' }
+    }
     const cookieStore = await cookies()
     cookieStore.delete('admin_lock')
     cookieStore.delete('admin_attempts')
+    
+    // Also clear IP ban from database if vault is set up
+    try {
+        const ipAddress = await getClientIP()
+        // @ts-ignore
+        await prisma.bannedIP?.update({
+            where: { ipAddress },
+            data: { isActive: false }
+        }).catch(() => {})
+    } catch (e) {}
+    
+    return { success: true }
 }
 
 export async function secureLogin(prevState: any, formData: FormData) {
     const username = formData.get('username') as string
     const password = formData.get('password') as string
-    const bypassKey = formData.get('bypass') as string
     const cookieStore = await cookies()
     const ipAddress = await getClientIP()
 
-    // Emergency bypass with secret key - skips ALL lockout checks
-    const BYPASS_SECRET = 'simplstudios-emergency-2026'
-    const isBypassing = bypassKey === BYPASS_SECRET
-
-    // Check if IP is banned in the database (skip if bypassing)
-    if (!isBypassing) {
-        try {
-            const banned = await isIPBanned(ipAddress)
-            if (banned) {
-                await logAuditAction('login_blocked_banned_ip', `Blocked banned IP: ${ipAddress}`)
-                return { error: 'Access denied. Your IP has been blocked.', locked: true, remainingAttempts: 0 }
-            }
-        } catch (e) {
-            // Continue if vault check fails (db not migrated yet)
+    // Check if IP is banned in the database
+    try {
+        const banned = await isIPBanned(ipAddress)
+        if (banned) {
+            await logAuditAction('login_blocked_banned_ip', `Blocked banned IP: ${ipAddress}`)
+            return { error: 'Access denied. Your IP has been blocked.', locked: true, remainingAttempts: 0 }
         }
+    } catch (e) {
+        // Continue if vault check fails (db not migrated yet)
     }
 
-    // Check if account is locked via cookies (skip if bypassing)
-    if (!isBypassing) {
-        const lockCookie = cookieStore.get('admin_lock')
-        if (lockCookie) {
-            const lockTime = parseInt(lockCookie.value)
-            const now = Date.now()
-            if (now - lockTime < LOCKOUT_DURATION) {
-                return { error: 'Account temporarily locked.', locked: true, remainingAttempts: 0 }
-            } else {
-                // Lockout expired, clear it
-                cookieStore.delete('admin_lock')
-                cookieStore.delete('admin_attempts')
-            }
+    // Check if account is locked via cookies
+    const lockCookie = cookieStore.get('admin_lock')
+    if (lockCookie) {
+        const lockTime = parseInt(lockCookie.value)
+        const now = Date.now()
+        if (now - lockTime < LOCKOUT_DURATION) {
+            return { error: 'Account temporarily locked.', locked: true, remainingAttempts: 0 }
+        } else {
+            // Lockout expired, clear it
+            cookieStore.delete('admin_lock')
+            cookieStore.delete('admin_attempts')
         }
-    } else {
-        // Clear lockout cookies when bypassing
-        cookieStore.delete('admin_lock')
-        cookieStore.delete('admin_attempts')
     }
 
     // Get current attempt count
