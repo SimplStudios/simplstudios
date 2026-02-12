@@ -2,7 +2,7 @@ import { prisma } from '@/lib/db'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Edit, Plus, ExternalLink, Trash2, BarChart3, Star, MessageSquare, Megaphone, FileText, Mail, AlertTriangle } from 'lucide-react'
+import { Edit, Plus, ExternalLink, Trash2, BarChart3, Star, MessageSquare, Megaphone, FileText, Mail, AlertTriangle, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
@@ -125,7 +125,7 @@ export default async function AdminDashboard() {
                 </div>
 
                 {/* Additional Tools */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <Link href="/admin/messages" className="group">
                         <Card className="p-4 bg-slate-900/50 border-slate-800 hover:border-cyan-500/50 transition-all group-hover:bg-slate-900">
                             <div className="flex items-center gap-3">
@@ -139,6 +139,14 @@ export default async function AdminDashboard() {
                             <div className="flex items-center gap-3">
                                 <AlertTriangle className="w-5 h-5 text-red-400" />
                                 <span className="font-medium text-white font-jakarta group-hover:text-red-400 transition-colors">Site Status</span>
+                            </div>
+                        </Card>
+                    </Link>
+                    <Link href="/admin/vault" className="group">
+                        <Card className="p-4 bg-gradient-to-br from-amber-900/30 to-orange-900/30 border-amber-700/50 hover:border-amber-500 transition-all group-hover:from-amber-900/50 group-hover:to-orange-900/50">
+                            <div className="flex items-center gap-3">
+                                <Shield className="w-5 h-5 text-amber-400" />
+                                <span className="font-medium text-white font-jakarta group-hover:text-amber-400 transition-colors">The Vault</span>
                             </div>
                         </Card>
                     </Link>

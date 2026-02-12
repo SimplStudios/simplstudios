@@ -2,8 +2,9 @@
 
 import { prisma } from '@/lib/db'
 import { verifyPassword } from '@/lib/auth'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { logAuditAction, isIPBanned, incrementFailedAttempts, banIP } from './vault'
 
 // Safe error parsing helper
 function getErrorMessage(error: unknown): string {
@@ -99,12 +100,32 @@ const ADMIN_PASSWORD = '^&*9uh8y79T657**98UHuh'
 const MAX_ATTEMPTS = 3
 const LOCKOUT_DURATION = 15 * 60 * 1000 // 15 minutes
 
+// Helper to get IP address
+async function getClientIP() {
+    const headersList = await headers()
+    const forwarded = headersList.get('x-forwarded-for')
+    const realIp = headersList.get('x-real-ip')
+    return forwarded?.split(',')[0] || realIp || 'unknown'
+}
+
 export async function secureLogin(prevState: any, formData: FormData) {
     const username = formData.get('username') as string
     const password = formData.get('password') as string
     const cookieStore = await cookies()
+    const ipAddress = await getClientIP()
 
-    // Check if account is locked
+    // Check if IP is banned in the database
+    try {
+        const banned = await isIPBanned(ipAddress)
+        if (banned) {
+            await logAuditAction('login_blocked_banned_ip', `Blocked banned IP: ${ipAddress}`)
+            return { error: 'Access denied. Your IP has been blocked.', locked: true, remainingAttempts: 0 }
+        }
+    } catch (e) {
+        // Continue if vault check fails (db not migrated yet)
+    }
+
+    // Check if account is locked via cookies
     const lockCookie = cookieStore.get('admin_lock')
     if (lockCookie) {
         const lockTime = parseInt(lockCookie.value)
@@ -131,7 +152,27 @@ export async function secureLogin(prevState: any, formData: FormData) {
     if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
         attempts++
         
-        // Store attempt count
+        // Log failed attempt to audit
+        try {
+            await logAuditAction('login_failed', `Failed login attempt ${attempts}/${MAX_ATTEMPTS}`)
+            
+            // Check if should ban IP based on database records
+            const shouldBan = await incrementFailedAttempts(ipAddress)
+            if (shouldBan) {
+                cookieStore.set('admin_lock', Date.now().toString(), {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    maxAge: LOCKOUT_DURATION / 1000,
+                    path: '/',
+                })
+                console.error(`[Security] IP ${ipAddress} banned after multiple failed attempts`)
+                return { error: 'Access locked. Your IP has been recorded.', locked: true, remainingAttempts: 0 }
+            }
+        } catch (e) {
+            // Continue with cookie-based tracking if vault isn't set up
+        }
+        
+        // Store attempt count in cookies
         cookieStore.set('admin_attempts', attempts.toString(), {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -139,7 +180,7 @@ export async function secureLogin(prevState: any, formData: FormData) {
             path: '/',
         })
 
-        // Check if should lock
+        // Check if should lock via cookies
         if (attempts >= MAX_ATTEMPTS) {
             cookieStore.set('admin_lock', Date.now().toString(), {
                 httpOnly: true,
@@ -147,11 +188,17 @@ export async function secureLogin(prevState: any, formData: FormData) {
                 maxAge: LOCKOUT_DURATION / 1000,
                 path: '/',
             })
-            console.error(`[Security] Account locked after ${MAX_ATTEMPTS} failed attempts`)
+            
+            // Also ban the IP in database
+            try {
+                await banIP(ipAddress, 'Cookie-based lockout triggered', false)
+            } catch (e) {}
+            
+            console.error(`[Security] Account locked after ${MAX_ATTEMPTS} failed attempts from IP: ${ipAddress}`)
             return { error: 'Access locked due to multiple failed attempts.', locked: true, remainingAttempts: 0 }
         }
 
-        console.warn(`[Security] Failed login attempt ${attempts}/${MAX_ATTEMPTS}`)
+        console.warn(`[Security] Failed login attempt ${attempts}/${MAX_ATTEMPTS} from IP: ${ipAddress}`)
         return { 
             error: 'Invalid credentials.', 
             locked: false, 
@@ -163,6 +210,11 @@ export async function secureLogin(prevState: any, formData: FormData) {
     cookieStore.delete('admin_attempts')
     cookieStore.delete('admin_lock')
     
+    // Log successful login
+    try {
+        await logAuditAction('login_success', `Successful admin login from IP: ${ipAddress}`)
+    } catch (e) {}
+    
     cookieStore.set('admin_session', 'true', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -171,6 +223,6 @@ export async function secureLogin(prevState: any, formData: FormData) {
         sameSite: 'strict',
     })
 
-    console.log('[Security] Successful admin login')
+    console.log(`[Security] Successful admin login from IP: ${ipAddress}`)
     redirect('/admin')
 }
