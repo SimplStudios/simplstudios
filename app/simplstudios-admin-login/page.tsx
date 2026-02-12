@@ -1,6 +1,6 @@
 'use client'
 
-import { useFormState } from 'react-dom'
+import { useActionState } from 'react'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -103,7 +103,7 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
 }
 
 export default function SecureAdminLoginPage() {
-    const [state, formAction] = useFormState(secureLogin, initialState)
+    const [state, formAction] = useActionState(secureLogin, initialState)
     const devToolsOpen = useDevToolsDetection()
     const [mounted, setMounted] = useState(false)
 
