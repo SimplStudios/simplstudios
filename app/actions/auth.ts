@@ -88,5 +88,89 @@ export async function login(prevState: any, formData: FormData) {
 export async function logout() {
     const cookieStore = await cookies()
     cookieStore.delete('admin_session')
-    redirect('/login')
+    cookieStore.delete('admin_lock')
+    cookieStore.delete('admin_attempts')
+    redirect('/')
+}
+
+// Secure login for hidden admin page with brute force protection
+const ADMIN_USERNAME = 'simplstudiosadmin0365'
+const ADMIN_PASSWORD = '^&*9uh8y79T657**98UHuh'
+const MAX_ATTEMPTS = 3
+const LOCKOUT_DURATION = 15 * 60 * 1000 // 15 minutes
+
+export async function secureLogin(prevState: any, formData: FormData) {
+    const username = formData.get('username') as string
+    const password = formData.get('password') as string
+    const cookieStore = await cookies()
+
+    // Check if account is locked
+    const lockCookie = cookieStore.get('admin_lock')
+    if (lockCookie) {
+        const lockTime = parseInt(lockCookie.value)
+        const now = Date.now()
+        if (now - lockTime < LOCKOUT_DURATION) {
+            return { error: 'Account temporarily locked.', locked: true, remainingAttempts: 0 }
+        } else {
+            // Lockout expired, clear it
+            cookieStore.delete('admin_lock')
+            cookieStore.delete('admin_attempts')
+        }
+    }
+
+    // Get current attempt count
+    const attemptsCookie = cookieStore.get('admin_attempts')
+    let attempts = attemptsCookie ? parseInt(attemptsCookie.value) : 0
+
+    // Validation
+    if (!username || !password) {
+        return { error: 'Enter credentials.', locked: false, remainingAttempts: MAX_ATTEMPTS - attempts }
+    }
+
+    // Check credentials
+    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+        attempts++
+        
+        // Store attempt count
+        cookieStore.set('admin_attempts', attempts.toString(), {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 60 * 60, // 1 hour
+            path: '/',
+        })
+
+        // Check if should lock
+        if (attempts >= MAX_ATTEMPTS) {
+            cookieStore.set('admin_lock', Date.now().toString(), {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: LOCKOUT_DURATION / 1000,
+                path: '/',
+            })
+            console.error(`[Security] Account locked after ${MAX_ATTEMPTS} failed attempts`)
+            return { error: 'Access locked due to multiple failed attempts.', locked: true, remainingAttempts: 0 }
+        }
+
+        console.warn(`[Security] Failed login attempt ${attempts}/${MAX_ATTEMPTS}`)
+        return { 
+            error: 'Invalid credentials.', 
+            locked: false, 
+            remainingAttempts: MAX_ATTEMPTS - attempts 
+        }
+    }
+
+    // Success - clear attempts and set session
+    cookieStore.delete('admin_attempts')
+    cookieStore.delete('admin_lock')
+    
+    cookieStore.set('admin_session', 'true', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60 * 24, // 1 day
+        path: '/',
+        sameSite: 'strict',
+    })
+
+    console.log('[Security] Successful admin login')
+    redirect('/admin')
 }

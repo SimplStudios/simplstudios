@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Check, X, Star, Trash2, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { approveReview, rejectReview, toggleFeatureReview, deleteReview, respondToReview } from '@/app/actions/reviews'
 
@@ -25,7 +25,7 @@ export default async function ReviewsAdminPage() {
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {
-        redirect('/login')
+        notFound()
     }
 
     const [reviews, apps] = await Promise.all([getReviews(), getApps()])

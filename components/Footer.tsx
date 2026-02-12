@@ -23,7 +23,7 @@ export function Footer() {
             </p>
             <div className="mt-8 flex gap-5 items-center">
               <a
-                href="https://github.com"
+                href="https://github.com/SimplStudios"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-slate-400 hover:text-white transition-colors hover:scale-110 transform duration-200"
@@ -41,7 +41,7 @@ export function Footer() {
                 <span className="sr-only">Twitter</span>
               </a>
               <a
-                href="mailto:hello@simplstudios.com"
+                href="mailto:simplstudios@protonmail.com"
                 className="text-slate-400 hover:text-white transition-colors hover:scale-110 transform duration-200"
               >
                 <Mail className="h-6 w-6" />
@@ -76,6 +76,11 @@ export function Footer() {
               <li>
                 <Link href="/about" className="text-slate-400 hover:text-blue-400 font-jakarta transition-colors">
                   About Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-slate-400 hover:text-blue-400 font-jakarta transition-colors">
+                  Contact
                 </Link>
               </li>
             </ul>

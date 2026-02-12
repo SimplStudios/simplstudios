@@ -15,11 +15,7 @@ const navigation = [
   { name: 'About', href: '/about' },
 ]
 
-interface NavbarProps {
-  isAdmin?: boolean;
-}
-
-export function Navbar({ isAdmin }: NavbarProps) {
+export function Navbar() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -53,17 +49,6 @@ export function Navbar({ isAdmin }: NavbarProps) {
                 {item.name}
               </Link>
             ))}
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className={cn(
-                  'text-sm font-bold font-jakarta transition-all text-blue-400 hover:text-blue-300',
-                  pathname === '/admin' ? 'text-blue-300' : ''
-                )}
-              >
-                Admin
-              </Link>
-            )}
           </div>
 
           {/* Right Side - Theme Toggle */}

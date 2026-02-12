@@ -18,6 +18,7 @@ model App {
   tagline     String
   description String
   icon        String
+  logoUrl     String?  @map("logo_url")
   color       String   @default("blue")
   screenshots String[]
   features    String[]
@@ -144,4 +145,47 @@ model Review {
   app           App       @relation(fields: [appSlug], references: [slug], onDelete: Cascade)
 
   @@map("reviews")
+}
+
+// User feedback/error messages to admins
+model UserMessage {
+  id            String    @id @default(cuid())
+  name          String
+  email         String
+  subject       String
+  message       String
+  type          String    @default("feedback") // feedback, bug, error, question
+  status        String    @default("unread") // unread, read, replied, resolved
+  adminReply    String?   @map("admin_reply")
+  repliedAt     DateTime? @map("replied_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("user_messages")
+}
+
+// Site error/status page configuration
+model SiteStatus {
+  id          String   @id @default(cuid())
+  title       String   @default("We'll be right back")
+  message     String   @default("We're experiencing some technical difficulties. Please check back soon.")
+  isActive    Boolean  @default(false) @map("is_active")
+  type        String   @default("maintenance") // maintenance, error, update
+  estimatedFix String? @map("estimated_fix")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("site_status")
+}
+
+// Security: Login attempt tracking
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  ipAddress String   @map("ip_address")
+  userAgent String?  @map("user_agent")
+  success   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([ipAddress, createdAt])
+  @@map("login_attempts")
 }

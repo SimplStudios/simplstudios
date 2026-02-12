@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { redirect } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { ArrowLeft, Save, Trash2 } from 'lucide-react'
@@ -14,7 +14,7 @@ export default async function EditAppPage({ params }: { params: Promise<{ slug: 
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {
-        redirect('/login')
+        notFound()
     }
 
     const app = await prisma.app.findUnique({
@@ -61,6 +61,7 @@ export default async function EditAppPage({ params }: { params: Promise<{ slug: 
                                         defaultValue={app.name}
                                         className="w-full px-4 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-blue-500 focus:outline-none"
                                     />
+                                    <p className="text-xs text-slate-500 mt-1">Changing the name will update the app URL</p>
                                 </div>
 
                                 <div>
@@ -72,6 +73,18 @@ export default async function EditAppPage({ params }: { params: Promise<{ slug: 
                                         className="w-full px-4 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-blue-500 focus:outline-none text-2xl"
                                     />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-2 font-jakarta">Logo URL (Optional)</label>
+                                <input
+                                    name="logoUrl"
+                                    type="url"
+                                    defaultValue={app.logoUrl || ''}
+                                    placeholder="https://example.com/logo.png"
+                                    className="w-full px-4 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-blue-500 focus:outline-none"
+                                />
+                                <p className="text-xs text-slate-500 mt-1">If provided, this will be used instead of the emoji icon</p>
                             </div>
 
                             <div>

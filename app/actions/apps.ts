@@ -18,6 +18,7 @@ export async function createApp(formData: FormData) {
     const tagline = formData.get('tagline') as string
     const description = formData.get('description') as string
     const icon = formData.get('icon') as string
+    const logoUrl = formData.get('logoUrl') as string || null
     const color = formData.get('color') as string || 'blue'
     const status = formData.get('status') as string || 'coming-soon'
     const url = formData.get('url') as string || null
@@ -47,6 +48,7 @@ export async function createApp(formData: FormData) {
             tagline,
             description,
             icon,
+            logoUrl: logoUrl || null,
             color,
             screenshots,
             features,
@@ -68,6 +70,7 @@ export async function updateApp(formData: FormData) {
     const tagline = formData.get('tagline') as string
     const description = formData.get('description') as string
     const icon = formData.get('icon') as string
+    const logoUrl = formData.get('logoUrl') as string || null
     const color = formData.get('color') as string || 'blue'
     const status = formData.get('status') as string || 'live'
     const url = formData.get('url') as string || null
@@ -81,13 +84,50 @@ export async function updateApp(formData: FormData) {
     const features = featuresStr ? featuresStr.split('\n').filter(s => s.trim()) : []
     const platforms = platformsStr ? platformsStr.split(',').map(s => s.trim()).filter(Boolean) : []
 
+    // Get the current app to check if name changed
+    const currentApp = await prisma.app.findUnique({ where: { id } })
+    if (!currentApp) throw new Error('App not found')
+
+    // Check if name changed and generate new slug
+    const newSlug = generateSlug(name)
+    const slugChanged = currentApp.slug !== newSlug
+
+    // If slug changed, update all related records
+    if (slugChanged) {
+        // Check if new slug is taken by another app
+        const existingApp = await prisma.app.findUnique({ where: { slug: newSlug } })
+        if (existingApp && existingApp.id !== id) {
+            throw new Error('An app with this name already exists')
+        }
+
+        // Update related updates
+        await prisma.update.updateMany({
+            where: { appSlug: currentApp.slug },
+            data: { appSlug: newSlug }
+        })
+
+        // Update related reviews
+        await prisma.review.updateMany({
+            where: { appSlug: currentApp.slug },
+            data: { appSlug: newSlug }
+        })
+
+        // Update related testimonials
+        await prisma.testimonial.updateMany({
+            where: { appSlug: currentApp.slug },
+            data: { appSlug: newSlug }
+        })
+    }
+
     await prisma.app.update({
         where: { id },
         data: {
             name,
+            slug: newSlug,
             tagline,
             description,
             icon,
+            logoUrl: logoUrl || null,
             color,
             screenshots,
             features,
@@ -99,6 +139,10 @@ export async function updateApp(formData: FormData) {
 
     revalidatePath('/admin')
     revalidatePath('/apps')
+    revalidatePath(`/apps/${newSlug}`)
+    if (slugChanged) {
+        revalidatePath(`/apps/${currentApp.slug}`)
+    }
     redirect('/admin')
 }
 

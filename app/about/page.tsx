@@ -255,7 +255,7 @@ export default function AboutPage() {
 
           <div className="flex flex-wrap gap-5 justify-center mb-16">
             <Button asChild variant="outline" size="lg" className="rounded-xl h-14 px-8 border-slate-700 hover:bg-slate-800 hover:text-white bg-slate-900/50 backdrop-blur-sm">
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/SimplStudios" target="_blank" rel="noopener noreferrer">
                 <Github className="mr-2 w-5 h-5" />
                 GitHub
               </a>
@@ -267,7 +267,7 @@ export default function AboutPage() {
               </a>
             </Button>
             <Button asChild variant="outline" size="lg" className="rounded-xl h-14 px-8 border-slate-700 hover:bg-slate-800 hover:text-white bg-slate-900/50 backdrop-blur-sm">
-              <a href="mailto:hello@simplstudios.com">
+              <a href="mailto:simplstudios@protonmail.com">
                 <Mail className="mr-2 w-5 h-5" />
                 Email Us
               </a>

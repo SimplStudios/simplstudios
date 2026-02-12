@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { ArrowLeft, Plus } from 'lucide-react'
@@ -19,7 +19,7 @@ export default async function NewUpdatePage() {
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {
-        redirect('/login')
+        notFound()
     }
 
     const apps = await getApps()

@@ -1,10 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Briefcase, ArrowRight, UserCheck } from 'lucide-react'
-import Link from 'next/link'
+import { Briefcase, ArrowRight } from 'lucide-react'
 
 export function CareersModal() {
     return (
@@ -46,24 +44,6 @@ export function CareersModal() {
                                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </a>
                             </Button>
-
-                            <div className="relative my-4">
-                                <div className="absolute inset-0 flex items-center">
-                                    <span className="w-full border-t border-slate-800" />
-                                </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-slate-950 px-2 text-slate-500 font-jakarta">Team Member?</span>
-                                </div>
-                            </div>
-
-                            <DialogClose asChild>
-                                <Button asChild variant="outline" className="w-full border-slate-800 hover:bg-slate-900 text-slate-400 hover:text-white">
-                                    <Link href="/login">
-                                        <UserCheck className="mr-2 w-4 h-4" />
-                                        Already an employee? Login
-                                    </Link>
-                                </Button>
-                            </DialogClose>
                         </div>
                     </div>
                 </div>

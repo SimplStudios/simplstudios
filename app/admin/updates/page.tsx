@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { deleteUpdate } from '@/app/actions/updates'
 
@@ -25,7 +25,7 @@ export default async function UpdatesAdminPage() {
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {
-        redirect('/login')
+        notFound()
     }
 
     const [updates, apps] = await Promise.all([getUpdates(), getApps()])

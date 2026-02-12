@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react'
@@ -12,7 +12,7 @@ export default async function NewAppPage() {
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {
-        redirect('/login')
+        notFound()
     }
 
     return (
@@ -51,6 +51,17 @@ export default async function NewAppPage() {
                                         className="w-full px-4 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-blue-500 focus:outline-none text-2xl"
                                     />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-2 font-jakarta">Logo URL (Optional)</label>
+                                <input
+                                    name="logoUrl"
+                                    type="url"
+                                    placeholder="https://example.com/logo.png"
+                                    className="w-full px-4 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-blue-500 focus:outline-none"
+                                />
+                                <p className="text-xs text-slate-500 mt-1">If provided, this will be used instead of the emoji icon</p>
                             </div>
 
                             <div>

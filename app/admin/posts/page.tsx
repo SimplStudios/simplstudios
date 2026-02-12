@@ -2,7 +2,7 @@ import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { ArrowLeft, Plus, Edit, Trash2, Pin, MessageCircle, Heart, Megaphone } from 'lucide-react'
@@ -13,7 +13,7 @@ export default async function AdminPostsPage() {
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {
-        redirect('/login')
+        notFound()
     }
 
     const posts = await prisma.post.findMany({

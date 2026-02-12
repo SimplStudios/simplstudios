@@ -2,9 +2,9 @@ import { prisma } from '@/lib/db'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Edit, Plus, ExternalLink, Trash2, BarChart3, Star, MessageSquare, Megaphone, FileText } from 'lucide-react'
+import { Edit, Plus, ExternalLink, Trash2, BarChart3, Star, MessageSquare, Megaphone, FileText, Mail, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
 
 async function getApps() {
@@ -26,7 +26,7 @@ export default async function AdminDashboard() {
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
 
     if (!isAdmin) {
-        redirect('/login')
+        notFound()
     }
 
     const [apps, stats] = await Promise.all([getApps(), getStats()])
@@ -97,7 +97,7 @@ export default async function AdminDashboard() {
                 </div>
 
                 {/* Quick Links */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <Link href="/admin/updates" className="group">
                         <Card className="p-4 bg-slate-900/50 border-slate-800 hover:border-violet-500/50 transition-all group-hover:bg-slate-900">
                             <div className="flex items-center gap-3">
@@ -119,6 +119,26 @@ export default async function AdminDashboard() {
                             <div className="flex items-center gap-3">
                                 <Megaphone className="w-5 h-5 text-green-400" />
                                 <span className="font-medium text-white font-jakarta group-hover:text-green-400 transition-colors">Message Board</span>
+                            </div>
+                        </Card>
+                    </Link>
+                </div>
+
+                {/* Additional Tools */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+                    <Link href="/admin/messages" className="group">
+                        <Card className="p-4 bg-slate-900/50 border-slate-800 hover:border-cyan-500/50 transition-all group-hover:bg-slate-900">
+                            <div className="flex items-center gap-3">
+                                <Mail className="w-5 h-5 text-cyan-400" />
+                                <span className="font-medium text-white font-jakarta group-hover:text-cyan-400 transition-colors">User Messages</span>
+                            </div>
+                        </Card>
+                    </Link>
+                    <Link href="/admin/status" className="group">
+                        <Card className="p-4 bg-slate-900/50 border-slate-800 hover:border-red-500/50 transition-all group-hover:bg-slate-900">
+                            <div className="flex items-center gap-3">
+                                <AlertTriangle className="w-5 h-5 text-red-400" />
+                                <span className="font-medium text-white font-jakarta group-hover:text-red-400 transition-colors">Site Status</span>
                             </div>
                         </Card>
                     </Link>
