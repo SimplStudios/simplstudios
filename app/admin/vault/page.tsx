@@ -6,16 +6,18 @@ import { Badge } from '@/components/ui/badge'
 import { 
     ArrowLeft, Shield, Key, Database, Users, MessageSquare, 
     AlertTriangle, Eye, EyeOff, Plus, Trash2, Edit, RefreshCw,
-    Ban, CheckCircle, Globe, Clock, Activity
+    Ban, CheckCircle, Globe, Clock, Activity, Unlock, Radio, Zap
 } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
+import { VaultWrapper } from '@/components/VaultWrapper'
 import { 
     getCredentials, createCredential, updateCredential, deleteCredential,
     getAuditLogs, getBannedIPs, unbanIP, banIP,
     getAdminChatMessages, sendAdminChatMessage,
-    getConnectedDatabases, addConnectedDatabase, refreshUserCount, getTotalUsersAcrossApps
+    getConnectedDatabases, addConnectedDatabase, refreshUserCount, getTotalUsersAcrossApps,
+    getKeygenLocks, unlockKeygenIP, getVaultEvents, getUsedVaultKeys
 } from '@/app/actions/vault'
 
 // Type definitions for Vault models
@@ -72,6 +74,39 @@ interface ConnectedDatabase {
     isActive: boolean
 }
 
+interface KeygenLock {
+    id: string
+    ipAddress: string
+    reason: string
+    attempts: number
+    lockedAt: Date
+    unlockedAt: Date | null
+    unlockedBy: string | null
+    isLocked: boolean
+    restoreUrl: string | null
+}
+
+interface VaultEvent {
+    id: string
+    eventType: string
+    ipAddress: string
+    userAgent: string | null
+    location: string | null
+    details: string | null
+    severity: string
+    createdAt: Date
+}
+
+interface UsedVaultKey {
+    id: string
+    instanceId: string
+    fullKeyHash: string
+    developerHex: string
+    ipAddress: string
+    generatedAt: Date
+    usedAt: Date
+}
+
 export default async function VaultPage() {
     const cookieStore = await cookies()
     const isAdmin = cookieStore.get('admin_session')?.value === 'true'
@@ -80,16 +115,20 @@ export default async function VaultPage() {
         notFound()
     }
 
-    const [credentials, auditLogs, bannedIPs, chatMessages, connectedDbs, userStats] = await Promise.all([
+    const [credentials, auditLogs, bannedIPs, chatMessages, connectedDbs, userStats, keygenLocks, vaultEvents, usedKeys] = await Promise.all([
         getCredentials() as Promise<VaultCredential[]>,
         getAuditLogs(50) as Promise<AuditLog[]>,
         getBannedIPs() as Promise<BannedIP[]>,
         getAdminChatMessages() as Promise<AdminChatMessage[]>,
         getConnectedDatabases() as Promise<ConnectedDatabase[]>,
-        getTotalUsersAcrossApps()
+        getTotalUsersAcrossApps(),
+        getKeygenLocks() as Promise<KeygenLock[]>,
+        getVaultEvents(30) as Promise<VaultEvent[]>,
+        getUsedVaultKeys(10) as Promise<UsedVaultKey[]>
     ])
 
     return (
+        <VaultWrapper>
         <div className="min-h-screen bg-slate-950 py-24">
             <div className="max-w-7xl mx-auto px-4">
                 {/* Header */}
@@ -109,7 +148,7 @@ export default async function VaultPage() {
                 </div>
 
                 {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
                     <Card className="bg-slate-900/50 border-slate-800 p-4">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
@@ -151,6 +190,17 @@ export default async function VaultPage() {
                             <div>
                                 <p className="text-2xl font-bold text-white">{connectedDbs.length}</p>
                                 <p className="text-xs text-slate-400">Connected DBs</p>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="bg-slate-900/50 border-slate-800 p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                                <Radio className="w-5 h-5 text-orange-400" />
+                            </div>
+                            <div>
+                                <p className="text-2xl font-bold text-white">{keygenLocks.filter(k => k.isLocked).length}</p>
+                                <p className="text-xs text-slate-400">Keygen Locks</p>
                             </div>
                         </div>
                     </Card>
@@ -415,9 +465,88 @@ export default async function VaultPage() {
                                 </Button>
                             </form>
                         </Card>
+
+                        {/* Keygen Locks */}
+                        <Card className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border-orange-800/50 p-6">
+                            <h2 className="text-xl font-semibold font-outfit text-white flex items-center gap-2 mb-6">
+                                <Radio className="w-5 h-5 text-orange-400" />
+                                Keygen Locks
+                            </h2>
+                            <p className="text-xs text-slate-400 mb-4">IPs locked from the key generator site</p>
+
+                            <div className="space-y-2 max-h-64 overflow-y-auto">
+                                {keygenLocks.map((lock) => (
+                                    <div key={lock.id} className={`p-3 rounded-lg border ${lock.isLocked ? 'bg-orange-900/20 border-orange-800/50' : 'bg-slate-800/30 border-slate-700/50'}`}>
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <code className="text-sm font-mono text-white">{lock.ipAddress}</code>
+                                                <p className="text-xs text-slate-400 mt-1">{lock.reason}</p>
+                                                <p className="text-xs text-slate-500">
+                                                    Attempts: {lock.attempts} • {new Date(lock.lockedAt).toLocaleString()}
+                                                </p>
+                                                {lock.unlockedBy && (
+                                                    <p className="text-xs text-green-400 mt-1">
+                                                        Unlocked by {lock.unlockedBy}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            {lock.isLocked && (
+                                                <form action={unlockKeygenIP.bind(null, lock.ipAddress)}>
+                                                    <Button type="submit" size="sm" variant="ghost" className="text-green-400 hover:text-green-300">
+                                                        <Unlock className="w-4 h-4" />
+                                                    </Button>
+                                                </form>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                                {keygenLocks.length === 0 && (
+                                    <p className="text-slate-500 text-center py-4 text-sm">No keygen locks</p>
+                                )}
+                            </div>
+                        </Card>
+
+                        {/* Vault Events Stream */}
+                        <Card className="bg-slate-900/50 border-slate-800 p-6">
+                            <h2 className="text-xl font-semibold font-outfit text-white flex items-center gap-2 mb-6">
+                                <Zap className="w-5 h-5 text-yellow-400" />
+                                Live Events
+                            </h2>
+                            <p className="text-xs text-slate-400 mb-4">Real-time events from key generator</p>
+
+                            <div className="space-y-2 max-h-64 overflow-y-auto">
+                                {vaultEvents.map((event) => (
+                                    <div key={event.id} className="flex items-start gap-2 p-2 bg-slate-800/30 rounded-lg text-xs">
+                                        <div className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${
+                                            event.severity === 'critical' ? 'bg-red-500 animate-pulse' :
+                                            event.severity === 'warning' ? 'bg-yellow-500' :
+                                            'bg-blue-500'
+                                        }`} />
+                                        <div className="flex-1 min-w-0">
+                                            <span className="text-slate-200 font-medium">
+                                                {event.eventType.replace(/_/g, ' ')}
+                                            </span>
+                                            <p className="text-slate-500 truncate">{event.ipAddress}</p>
+                                            {event.details && (
+                                                <p className="text-slate-600 truncate text-[10px]">
+                                                    {event.details.slice(0, 50)}...
+                                                </p>
+                                            )}
+                                        </div>
+                                        <span className="text-slate-600 whitespace-nowrap">
+                                            {new Date(event.createdAt).toLocaleTimeString()}
+                                        </span>
+                                    </div>
+                                ))}
+                                {vaultEvents.length === 0 && (
+                                    <p className="text-slate-500 text-center py-4 text-sm">No events yet</p>
+                                )}
+                            </div>
+                        </Card>
                     </div>
                 </div>
             </div>
         </div>
+        </VaultWrapper>
     )
 }

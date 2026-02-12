@@ -379,3 +379,61 @@ export async function getTotalUsersAcrossApps() {
 
     return { total, databases }
 }
+
+// ===================
+// KEYGEN LOCKS MANAGEMENT
+// ===================
+
+export async function getKeygenLocks() {
+    // @ts-ignore - Prisma types available after migration
+    return await prisma.keygenLock.findMany({
+        orderBy: { lockedAt: 'desc' }
+    })
+}
+
+export async function unlockKeygenIP(ipAddress: string) {
+    // @ts-ignore - Prisma types available after migration
+    await prisma.keygenLock.update({
+        where: { ipAddress },
+        data: {
+            isLocked: false,
+            unlockedAt: new Date(),
+            unlockedBy: 'Admin'
+        }
+    })
+
+    // Log to vault events
+    // @ts-ignore
+    await prisma.vaultEvent.create({
+        data: {
+            eventType: 'ip_unlocked',
+            ipAddress,
+            details: JSON.stringify({ unlockedBy: 'Admin' }),
+            severity: 'info'
+        }
+    })
+
+    await logAuditAction('keygen_ip_unlocked', `Unlocked keygen IP: ${ipAddress}`)
+    revalidatePath('/admin/vault')
+}
+
+// ===================
+// VAULT EVENTS
+// ===================
+
+export async function getVaultEvents(limit = 50) {
+    // @ts-ignore - Prisma types available after migration
+    return await prisma.vaultEvent.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit
+    })
+}
+
+export async function getUsedVaultKeys(limit = 20) {
+    // @ts-ignore - Prisma types available after migration
+    return await prisma.usedVaultKey.findMany({
+        orderBy: { usedAt: 'desc' },
+        take: limit
+    })
+}
+

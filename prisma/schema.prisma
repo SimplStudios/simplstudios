@@ -266,3 +266,63 @@ model ConnectedDatabase {
 
   @@map("connected_databases")
 }
+
+// =====================
+// VAULT KEYGEN INTEGRATION
+// =====================
+
+// Events logged from external Key Maker site
+model VaultEvent {
+  id          String   @id @default(cuid())
+  eventType   String   @map("event_type") // failed_attempt, lockout, devtools_opened, key_generated, key_expired, key_validated
+  ipAddress   String   @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  location    String?  // Country/City if available
+  details     String?  // JSON: partial code hex, attempt number, developer name, etc.
+  severity    String   @default("info") // info, warning, critical
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([ipAddress, createdAt])
+  @@index([eventType, createdAt])
+  @@map("vault_events")
+}
+
+// Used security keys (prevent replay attacks)
+model UsedVaultKey {
+  id          String   @id @default(cuid())
+  instanceId  String   @unique @map("instance_id") // The 4-char instance ID from key
+  fullKeyHash String   @map("full_key_hash") // SHA256 of full key
+  developerHex String  @map("developer_hex") // Who generated it
+  ipAddress   String   @map("ip_address") // Where it was used
+  generatedAt DateTime @map("generated_at") // Extracted from key timestamp
+  usedAt      DateTime @default(now()) @map("used_at")
+
+  @@index([instanceId])
+  @@map("used_vault_keys")
+}
+
+// Keygen lockouts (separate from admin login bans)
+model KeygenLock {
+  id          String    @id @default(cuid())
+  ipAddress   String    @unique @map("ip_address")
+  reason      String    @default("Too many failed keygen attempts")
+  attempts    Int       @default(3)
+  lockedAt    DateTime  @default(now()) @map("locked_at")
+  unlockedAt  DateTime? @map("unlocked_at")
+  unlockedBy  String?   @map("unlocked_by") // Admin who unlocked
+  isLocked    Boolean   @default(true) @map("is_locked")
+  restoreUrl  String?   @map("restore_url") // Pre-built admin restore URL
+
+  @@map("keygen_locks")
+}
+
+// Valid access codes for key generation
+model VaultAccessCode {
+  id        String   @id @default(cuid())
+  codeHex   String   @unique @map("code_hex") // Hex-encoded access code
+  codeName  String   @map("code_name") // Human-readable name (e.g., "Andy")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("vault_access_codes")
+}
