@@ -500,7 +500,7 @@ const VAULT_MIGRATIONS = [
         event_type TEXT NOT NULL,
         ip_address TEXT NOT NULL,
         user_agent TEXT,
-        access_code TEXT,
+        location TEXT,
         details TEXT,
         severity TEXT DEFAULT 'info',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -518,9 +518,12 @@ const VAULT_MIGRATIONS = [
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         ip_address TEXT UNIQUE NOT NULL,
         reason TEXT DEFAULT 'Too many failed attempts',
+        attempts INT DEFAULT 3,
         locked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         unlocked_at TIMESTAMP,
-        is_active BOOLEAN DEFAULT true
+        unlocked_by TEXT,
+        is_locked BOOLEAN DEFAULT true,
+        restore_url TEXT
     )`,
     `CREATE TABLE IF NOT EXISTS vault_access_codes (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,

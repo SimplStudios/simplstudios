@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { 
     ArrowLeft, Shield, Key, Database, Users, MessageSquare, 
     AlertTriangle, Eye, EyeOff, Plus, Trash2, Edit, RefreshCw,
-    Ban, CheckCircle, Globe, Clock, Activity, Unlock, Radio, Zap
+    Ban, CheckCircle, Globe, Clock, Activity, Unlock, Radio, Zap, ExternalLink, KeyRound
 } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -557,6 +557,62 @@ export default async function VaultPage() {
                                     <p className="text-slate-500 text-center py-4 text-sm">No events yet</p>
                                 )}
                             </div>
+                        </Card>
+
+                        {/* Recently Generated Keys */}
+                        <Card className="bg-gradient-to-br from-emerald-900/20 to-teal-900/20 border-emerald-800/50 p-6">
+                            <h2 className="text-xl font-semibold font-outfit text-white flex items-center gap-2 mb-6">
+                                <KeyRound className="w-5 h-5 text-emerald-400" />
+                                Recently Used Keys
+                            </h2>
+                            <p className="text-xs text-slate-400 mb-4">Keys validated against The Vault</p>
+
+                            <div className="space-y-2 max-h-64 overflow-y-auto">
+                                {usedKeys.map((key) => (
+                                    <div key={key.id} className="p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <code className="text-sm font-mono text-emerald-400">{key.developerHex}</code>
+                                                    <Badge className="bg-emerald-500/20 text-emerald-400 text-[10px]">Valid</Badge>
+                                                </div>
+                                                <p className="text-xs text-slate-500 mt-1 font-mono truncate">
+                                                    Instance: {key.instanceId.slice(0, 12)}...
+                                                </p>
+                                                <p className="text-xs text-slate-500">
+                                                    IP: {key.ipAddress}
+                                                </p>
+                                            </div>
+                                            <div className="text-right text-xs text-slate-500">
+                                                <p>Generated: {new Date(key.generatedAt).toLocaleDateString()}</p>
+                                                <p>Used: {new Date(key.usedAt).toLocaleString()}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {usedKeys.length === 0 && (
+                                    <p className="text-slate-500 text-center py-4 text-sm">No keys used yet</p>
+                                )}
+                            </div>
+                        </Card>
+
+                        {/* Admin Keygen Access */}
+                        <Card className="bg-gradient-to-br from-violet-900/20 to-purple-900/20 border-violet-800/50 p-6">
+                            <h2 className="text-xl font-semibold font-outfit text-white flex items-center gap-2 mb-4">
+                                <ExternalLink className="w-5 h-5 text-violet-400" />
+                                Key Generator
+                            </h2>
+                            <p className="text-xs text-slate-400 mb-4">Generate new security keys for authorized developers</p>
+                            <a 
+                                href="https://68fe8atay8wewqw0d9ew7fe99w8e8fe7y329.puter.site/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                <Key className="w-4 h-4" />
+                                Open Key Generator
+                            </a>
+                            <p className="text-[10px] text-slate-600 mt-3">This link is only visible to authenticated Vault admins.</p>
                         </Card>
                     </div>
                 </div>
