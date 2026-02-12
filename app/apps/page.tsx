@@ -10,7 +10,11 @@ export const metadata: Metadata = {
 
 async function getApps() {
   const apps = await prisma.app.findMany({
-    orderBy: { createdAt: 'asc' },
+    orderBy: [
+      { pinned: 'desc' },      // Pinned apps first
+      { pinnedOrder: 'asc' },  // Then by pinned order
+      { createdAt: 'asc' },    // Then by creation date
+    ],
   })
   return apps
 }

@@ -499,13 +499,17 @@ const VAULT_MIGRATIONS = [
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         event_type TEXT NOT NULL,
         ip_address TEXT NOT NULL,
+        user_agent TEXT,
         access_code TEXT,
         details TEXT,
+        severity TEXT DEFAULT 'info',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
     `CREATE TABLE IF NOT EXISTS used_vault_keys (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        key_hash TEXT UNIQUE NOT NULL,
+        instance_id TEXT UNIQUE NOT NULL,
+        full_key_hash TEXT NOT NULL,
+        developer_hex TEXT NOT NULL,
         ip_address TEXT NOT NULL,
         generated_at TIMESTAMP NOT NULL,
         used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -40,9 +40,11 @@ export function AppCard({ app, index }: { app: App; index: number }) {
               Live
             </span>
           )}
-          <span className="bg-slate-800 text-slate-300 px-3 py-1 rounded-full text-xs font-semibold font-jakarta border border-slate-700">
-            {app.platforms[0].charAt(0).toUpperCase() + app.platforms[0].slice(1)}
-          </span>
+          {app.platforms && app.platforms.length > 0 && (
+            <span className="bg-slate-800 text-slate-300 px-3 py-1 rounded-full text-xs font-semibold font-jakarta border border-slate-700">
+              {app.platforms[0].charAt(0).toUpperCase() + app.platforms[0].slice(1)}
+            </span>
+          )}
         </div>
 
         <Link

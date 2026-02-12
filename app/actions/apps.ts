@@ -154,3 +154,47 @@ export async function deleteApp(id: string) {
     revalidatePath('/apps')
     redirect('/admin')
 }
+
+// Toggle pin status for an app
+export async function toggleAppPin(id: string) {
+    const app = await prisma.app.findUnique({ where: { id } })
+    if (!app) throw new Error('App not found')
+
+    // If pinning, get the next order number
+    let pinnedOrder = null
+    if (!app.pinned) {
+        const maxOrder = await prisma.app.aggregate({
+            where: { pinned: true },
+            _max: { pinnedOrder: true }
+        })
+        pinnedOrder = (maxOrder._max.pinnedOrder ?? 0) + 1
+    }
+
+    await prisma.app.update({
+        where: { id },
+        data: {
+            pinned: !app.pinned,
+            pinnedOrder: !app.pinned ? pinnedOrder : null
+        }
+    })
+
+    revalidatePath('/admin')
+    revalidatePath('/apps')
+    revalidatePath('/')
+}
+
+// Update pinned order for multiple apps
+export async function updatePinnedOrder(updates: { id: string, order: number }[]) {
+    await Promise.all(
+        updates.map(({ id, order }) => 
+            prisma.app.update({
+                where: { id },
+                data: { pinnedOrder: order }
+            })
+        )
+    )
+
+    revalidatePath('/admin')
+    revalidatePath('/apps')
+    revalidatePath('/')
+}

@@ -91,10 +91,16 @@ export async function POST(request: NextRequest) {
         const instanceId = payload.substring(11, 15)
 
         // Check if instance ID already used (prevent replay)
-        // @ts-ignore
-        const existingUse = await prisma.usedVaultKey.findUnique({
-            where: { instanceId }
-        })
+        let existingUse = null
+        try {
+            // @ts-ignore
+            existingUse = await prisma.usedVaultKey.findUnique({
+                where: { instanceId }
+            })
+        } catch (dbError) {
+            // Table might not exist yet, continue without replay check
+            console.warn('[Vault API] usedVaultKey table may not exist:', dbError)
+        }
 
         if (existingUse) {
             await logValidationAttempt(ipAddress, userAgent, 'replay_attempt', false, { instanceId })
@@ -117,17 +123,22 @@ export async function POST(request: NextRequest) {
         // Hash the full key for storage
         const keyHash = createHash('sha256').update(key).digest('hex')
 
-        // Store the used key
-        // @ts-ignore
-        await prisma.usedVaultKey.create({
-            data: {
-                instanceId,
-                fullKeyHash: keyHash,
-                developerHex: hexName,
-                ipAddress,
-                generatedAt: new Date(keyTimestamp)
-            }
-        })
+        // Store the used key (if table exists)
+        try {
+            // @ts-ignore
+            await prisma.usedVaultKey.create({
+                data: {
+                    instanceId,
+                    fullKeyHash: keyHash,
+                    developerHex: hexName,
+                    ipAddress,
+                    generatedAt: new Date(keyTimestamp)
+                }
+            })
+        } catch (dbError) {
+            // Table might not exist, continue anyway
+            console.warn('[Vault API] Could not store used key:', dbError)
+        }
 
         // Log successful validation
         await logValidationAttempt(ipAddress, userAgent, 'success', true, {

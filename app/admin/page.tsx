@@ -2,13 +2,20 @@ import { prisma } from '@/lib/db'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Edit, Plus, ExternalLink, Trash2, BarChart3, Star, MessageSquare, Megaphone, FileText, Mail, AlertTriangle, Shield } from 'lucide-react'
+import { Edit, Plus, ExternalLink, Trash2, BarChart3, Star, MessageSquare, Megaphone, FileText, Mail, AlertTriangle, Shield, Pin, PinOff } from 'lucide-react'
 import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
+import { toggleAppPin } from '@/app/actions/apps'
 
 async function getApps() {
-    return await prisma.app.findMany({ orderBy: { createdAt: 'desc' } })
+    return await prisma.app.findMany({ 
+        orderBy: [
+            { pinned: 'desc' },
+            { pinnedOrder: 'asc' },
+            { createdAt: 'desc' }
+        ] 
+    })
 }
 
 async function getStats() {
@@ -160,12 +167,33 @@ export default async function AdminDashboard() {
                 {/* Apps Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {apps.map((app) => (
-                        <Card key={app.id} className="p-6 bg-slate-900 border-slate-800 hover:border-slate-700 transition-colors">
+                        <Card key={app.id} className={`p-6 bg-slate-900 border-slate-800 hover:border-slate-700 transition-colors relative ${app.pinned ? 'ring-2 ring-amber-500/50' : ''}`}>
+                            {app.pinned && (
+                                <div className="absolute -top-2 -right-2 bg-amber-500 text-black p-1 rounded-full">
+                                    <Pin className="w-3 h-3" />
+                                </div>
+                            )}
                             <div className="flex items-start justify-between mb-4">
                                 <div className="text-4xl">{app.icon}</div>
-                                <Badge variant={app.status as 'live' | 'beta' | 'coming-soon'}>
-                                    {app.status}
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                    <form action={async () => {
+                                        'use server'
+                                        await toggleAppPin(app.id)
+                                    }}>
+                                        <Button 
+                                            size="sm" 
+                                            variant="ghost" 
+                                            type="submit"
+                                            className={app.pinned ? 'text-amber-400 hover:text-amber-300' : 'text-slate-400 hover:text-white'}
+                                            title={app.pinned ? 'Unpin from top' : 'Pin to top'}
+                                        >
+                                            {app.pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                                        </Button>
+                                    </form>
+                                    <Badge variant={app.status as 'live' | 'beta' | 'coming-soon'}>
+                                        {app.status}
+                                    </Badge>
+                                </div>
                             </div>
                             <h3 className="text-xl font-bold font-outfit text-white mb-2">{app.name}</h3>
                             <p className="text-slate-400 font-jakarta text-sm mb-6 line-clamp-2">
