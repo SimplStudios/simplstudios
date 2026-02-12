@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Shield, Key, AlertTriangle, CheckCircle, ExternalLink } from 'lucide-react'
+import { Shield, Key, AlertTriangle, CheckCircle } from 'lucide-react'
 
 interface VaultKeyGateProps {
     onValidated: () => void
@@ -105,7 +105,7 @@ export function VaultKeyGate({ onValidated }: VaultKeyGateProps) {
                             value={key}
                             onChange={(e) => setKey(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleValidate()}
-                            placeholder="Paste your generated key"
+                            placeholder="Enter security key"
                             className="bg-slate-800/50 border-slate-700 font-mono text-sm"
                             autoFocus
                         />
@@ -135,21 +135,6 @@ export function VaultKeyGate({ onValidated }: VaultKeyGateProps) {
                             </span>
                         )}
                     </Button>
-                </div>
-
-                {/* Help Link */}
-                <div className="mt-6 pt-6 border-t border-slate-800">
-                    <p className="text-xs text-slate-500 text-center">
-                        Need a key?{' '}
-                        <a 
-                            href="https://68fe8atay8wewqw0d9ew7fe99w8e8fe7y329.puter.site/" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-amber-400 hover:text-amber-300 inline-flex items-center gap-1"
-                        >
-                            Generate one <ExternalLink className="w-3 h-3" />
-                        </a>
-                    </p>
                 </div>
             </Card>
         </div>
