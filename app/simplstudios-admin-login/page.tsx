@@ -1,164 +1,151 @@
 'use client'
 
-import { useActionState } from 'react'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Shield, AlertTriangle } from 'lucide-react'
-import { secureLogin } from '@/app/actions/auth'
+import { Shield, AlertTriangle, Lock } from 'lucide-react'
 
-const initialState = {
-    error: '',
-    locked: false,
-    remainingAttempts: 3,
-}
-
-// DevTools detection component
-function useDevToolsDetection() {
-    const [devToolsOpen, setDevToolsOpen] = useState(false)
-
-    useEffect(() => {
-        const threshold = 160
-
-        const checkDevTools = () => {
-            const widthThreshold = window.outerWidth - window.innerWidth > threshold
-            const heightThreshold = window.outerHeight - window.innerHeight > threshold
-            
-            if (widthThreshold || heightThreshold) {
-                setDevToolsOpen(true)
-            }
-        }
-
-        // Check on resize
-        const handleResize = () => {
-            checkDevTools()
-        }
-
-        // Disable right-click
-        const handleContextMenu = (e: MouseEvent) => {
-            e.preventDefault()
-            return false
-        }
-
-        // Disable common keyboard shortcuts
-        const handleKeyDown = (e: KeyboardEvent) => {
-            // F12
-            if (e.key === 'F12') {
-                e.preventDefault()
-                setDevToolsOpen(true)
-                return false
-            }
-            // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
-            if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) {
-                e.preventDefault()
-                setDevToolsOpen(true)
-                return false
-            }
-            // Ctrl+U (view source)
-            if (e.ctrlKey && e.key.toUpperCase() === 'U') {
-                e.preventDefault()
-                return false
-            }
-        }
-
-        // Detect debugger statement
-        const detectDebugger = () => {
-            const start = performance.now()
-            // This is intentionally empty - debugger detection
-            const end = performance.now()
-            if (end - start > 100) {
-                setDevToolsOpen(true)
-            }
-        }
-
-        window.addEventListener('resize', handleResize)
-        document.addEventListener('contextmenu', handleContextMenu)
-        document.addEventListener('keydown', handleKeyDown)
-        
-        const interval = setInterval(detectDebugger, 1000)
-        checkDevTools()
-
-        return () => {
-            window.removeEventListener('resize', handleResize)
-            document.removeEventListener('contextmenu', handleContextMenu)
-            document.removeEventListener('keydown', handleKeyDown)
-            clearInterval(interval)
-        }
-    }, [])
-
-    return devToolsOpen
-}
-
-function SubmitButton({ disabled }: { disabled: boolean }) {
-    return (
-        <Button 
-            type="submit" 
-            disabled={disabled}
-            className="w-full bg-blue-600 hover:bg-blue-700 h-11 text-base shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-            <Shield className="mr-2 w-4 h-4" />
-            Authenticate
-        </Button>
-    )
-}
+const ADMIN_USERNAME = 'simplstudiosadmin0365'
+const ADMIN_PASSWORD = '^&*9uh8y79T657**98UHuh'
+const MAX_ATTEMPTS = 3
+const LOCKOUT_DURATION = 15 * 60 * 1000 // 15 minutes
 
 export default function SecureAdminLoginPage() {
-    const [state, formAction] = useActionState(secureLogin, initialState)
-    const devToolsOpen = useDevToolsDetection()
+    const [username, setUsername] = useState('')
+    const [password, setPassword] = useState('')
+    const [error, setError] = useState('')
+    const [attempts, setAttempts] = useState(0)
+    const [isLocked, setIsLocked] = useState(false)
+    const [lockEndTime, setLockEndTime] = useState<number | null>(null)
+    const [timeRemaining, setTimeRemaining] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
     const [mounted, setMounted] = useState(false)
 
+    // Load lockout state from localStorage on mount
     useEffect(() => {
         setMounted(true)
+        const storedLockEnd = localStorage.getItem('admin_lock_end')
+        const storedAttempts = localStorage.getItem('admin_attempts')
         
-        // Disable console methods
-        if (typeof window !== 'undefined') {
-            const noop = () => {}
-            const methods = ['log', 'debug', 'info', 'warn', 'error', 'table', 'trace', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'assert', 'profile']
-            methods.forEach(method => {
-                (console as any)[method] = noop
-            })
+        if (storedLockEnd) {
+            const lockEnd = parseInt(storedLockEnd)
+            if (Date.now() < lockEnd) {
+                setIsLocked(true)
+                setLockEndTime(lockEnd)
+                setAttempts(MAX_ATTEMPTS)
+            } else {
+                // Lockout expired, clear it
+                localStorage.removeItem('admin_lock_end')
+                localStorage.removeItem('admin_attempts')
+            }
+        }
+        
+        if (storedAttempts && !storedLockEnd) {
+            setAttempts(parseInt(storedAttempts))
         }
     }, [])
 
-    // Show warning if DevTools detected
-    if (devToolsOpen && mounted) {
+    // Live countdown timer
+    useEffect(() => {
+        if (!isLocked || !lockEndTime) return
+
+        const updateTimer = () => {
+            const now = Date.now()
+            const remaining = lockEndTime - now
+
+            if (remaining <= 0) {
+                setIsLocked(false)
+                setLockEndTime(null)
+                setAttempts(0)
+                setError('')
+                localStorage.removeItem('admin_lock_end')
+                localStorage.removeItem('admin_attempts')
+                return
+            }
+
+            const minutes = Math.floor(remaining / 60000)
+            const seconds = Math.floor((remaining % 60000) / 1000)
+            setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`)
+        }
+
+        updateTimer()
+        const interval = setInterval(updateTimer, 1000)
+        return () => clearInterval(interval)
+    }, [isLocked, lockEndTime])
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        
+        if (isLocked) return
+        
+        setIsLoading(true)
+        setError('')
+
+        // Simulate network delay
+        await new Promise(r => setTimeout(r, 500))
+
+        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+            // Success - set session cookie and redirect
+            document.cookie = 'admin_session=true; path=/; max-age=86400; samesite=strict'
+            localStorage.removeItem('admin_lock_end')
+            localStorage.removeItem('admin_attempts')
+            window.location.href = '/admin'
+        } else {
+            // Failed attempt
+            const newAttempts = attempts + 1
+            setAttempts(newAttempts)
+            localStorage.setItem('admin_attempts', newAttempts.toString())
+
+            if (newAttempts >= MAX_ATTEMPTS) {
+                // Lock the account
+                const lockEnd = Date.now() + LOCKOUT_DURATION
+                setIsLocked(true)
+                setLockEndTime(lockEnd)
+                localStorage.setItem('admin_lock_end', lockEnd.toString())
+                setError('Too many failed attempts.')
+            } else {
+                const remaining = MAX_ATTEMPTS - newAttempts
+                setError(`Incorrect credentials. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`)
+            }
+        }
+
+        setIsLoading(false)
+        setPassword('')
+    }
+
+    if (!mounted) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-red-950 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/30 via-red-950 to-black" />
-                <Card className="w-full max-w-md p-8 bg-red-900/30 backdrop-blur-xl border-red-800 relative z-10">
-                    <div className="text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-red-600/20 rounded-2xl mb-6 border border-red-600/30">
-                            <AlertTriangle className="w-8 h-8 text-red-400" />
-                        </div>
-                        <h1 className="text-2xl font-bold font-outfit text-red-400 mb-2">Security Violation</h1>
-                        <p className="text-red-300/70 font-jakarta">
-                            Developer tools detected. Access denied.
-                        </p>
-                        <p className="text-red-400/50 text-sm mt-4 font-jakarta">
-                            This incident has been logged.
-                        </p>
-                    </div>
-                </Card>
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
             </div>
         )
     }
 
-    // Show lockout screen
-    if (state?.locked) {
+    // Lockout screen with live timer
+    if (isLocked) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/20 via-slate-950 to-slate-950" />
-                <Card className="w-full max-w-md p-8 bg-slate-900/50 backdrop-blur-xl border-red-800/50 relative z-10">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/30 via-slate-950 to-black" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/10 rounded-full blur-[120px] pointer-events-none" />
+                
+                <Card className="w-full max-w-md p-8 bg-red-950/40 backdrop-blur-xl border-red-800/50 relative z-10">
                     <div className="text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-red-600/20 rounded-2xl mb-6 border border-red-600/30">
-                            <AlertTriangle className="w-8 h-8 text-red-400" />
+                        <div className="inline-flex items-center justify-center w-20 h-20 bg-red-600/20 rounded-2xl mb-6 border border-red-600/40">
+                            <Lock className="w-10 h-10 text-red-500" />
                         </div>
-                        <h1 className="text-2xl font-bold font-outfit text-red-400 mb-2">Access Locked</h1>
-                        <p className="text-slate-400 font-jakarta">
+                        <h1 className="text-3xl font-bold font-outfit text-red-500 mb-3">Access Locked</h1>
+                        <p className="text-red-300/70 font-jakarta mb-6">
                             Too many failed attempts. Access has been temporarily disabled.
                         </p>
-                        <p className="text-slate-500 text-sm mt-4 font-jakarta">
-                            Try again in 15 minutes or contact system administrator.
+                        
+                        {/* Live Timer */}
+                        <div className="bg-red-900/30 rounded-xl p-6 border border-red-800/50 mb-4">
+                            <p className="text-red-400/60 text-sm font-jakarta mb-2">Time remaining</p>
+                            <p className="text-5xl font-bold font-mono text-red-500">{timeRemaining}</p>
+                        </div>
+                        
+                        <p className="text-red-400/40 text-xs font-jakarta">
+                            This incident has been logged.
                         </p>
                     </div>
                 </Card>
@@ -168,62 +155,86 @@ export default function SecureAdminLoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden select-none">
-            {/* Background Effects */}
-            <div className="absolute inset-0 bg-slate-950" />
-            <div className="absolute inset-0 bg-gradient-to-tr from-slate-900/50 via-slate-950 to-slate-950" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
+            {/* Red Background Effects */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/20 via-slate-950 to-black" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-red-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-            <Card className="w-full max-w-md p-8 md:p-10 bg-slate-900/50 backdrop-blur-xl border-slate-800 relative z-10 shadow-2xl">
+            <Card className="w-full max-w-md p-8 md:p-10 bg-red-950/30 backdrop-blur-xl border-red-900/50 relative z-10 shadow-2xl shadow-red-900/20">
                 <div className="text-center mb-10">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl mb-6 shadow-lg ring-1 ring-white/5">
-                        <Shield className="w-8 h-8 text-slate-400" />
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-700 to-red-900 rounded-2xl mb-6 shadow-lg shadow-red-900/50 ring-1 ring-red-500/20">
+                        <Shield className="w-8 h-8 text-red-200" />
                     </div>
                     <h1 className="text-2xl font-bold font-outfit text-white mb-2">Secure Access</h1>
-                    <p className="text-slate-500 font-jakarta text-sm">Authorized personnel only</p>
+                    <p className="text-red-400/60 font-jakarta text-sm">Authorized personnel only</p>
                 </div>
 
-                <form action={formAction} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-400 font-jakarta ml-1">Username</label>
+                        <label className="text-sm font-medium text-red-300/80 font-jakarta ml-1">Username</label>
                         <input
                             type="text"
-                            name="username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                             required
                             autoComplete="off"
                             spellCheck="false"
-                            className="w-full px-4 py-3 rounded-xl bg-slate-950/50 border border-slate-800 text-white placeholder:text-slate-700 focus:outline-none focus:border-slate-700 transition-all font-jakarta"
+                            disabled={isLoading}
+                            className="w-full px-4 py-3 rounded-xl bg-red-950/50 border border-red-800/50 text-white placeholder:text-red-900/50 focus:outline-none focus:border-red-700/70 focus:ring-1 focus:ring-red-700/30 transition-all font-jakarta disabled:opacity-50"
                             placeholder="Enter username"
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-400 font-jakarta ml-1">Password</label>
+                        <label className="text-sm font-medium text-red-300/80 font-jakarta ml-1">Password</label>
                         <input
                             type="password"
-                            name="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             required
                             autoComplete="off"
-                            className="w-full px-4 py-3 rounded-xl bg-slate-950/50 border border-slate-800 text-white placeholder:text-slate-700 focus:outline-none focus:border-slate-700 transition-all font-jakarta"
+                            disabled={isLoading}
+                            className="w-full px-4 py-3 rounded-xl bg-red-950/50 border border-red-800/50 text-white placeholder:text-red-900/50 focus:outline-none focus:border-red-700/70 focus:ring-1 focus:ring-red-700/30 transition-all font-jakarta disabled:opacity-50"
                             placeholder="Enter password"
                         />
                     </div>
 
-                    {state?.error && (
-                        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center font-medium">
-                            {state.error}
-                            {state.remainingAttempts !== undefined && state.remainingAttempts > 0 && (
-                                <span className="block text-xs mt-1 text-red-400/60">
-                                    {state.remainingAttempts} attempt{state.remainingAttempts !== 1 ? 's' : ''} remaining
-                                </span>
-                            )}
+                    {/* Error with attempts remaining */}
+                    {error && (
+                        <div className="p-4 rounded-xl bg-red-900/40 border border-red-700/50 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-1">
+                                <AlertTriangle className="w-4 h-4 text-red-400" />
+                                <span className="text-red-300 font-medium font-jakarta">{error}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Attempts indicator (always visible when attempts > 0) */}
+                    {attempts > 0 && !error && (
+                        <div className="text-center">
+                            <span className="text-red-400/60 text-sm font-jakarta">
+                                {MAX_ATTEMPTS - attempts} attempt{MAX_ATTEMPTS - attempts !== 1 ? 's' : ''} remaining
+                            </span>
                         </div>
                     )}
 
                     <div className="pt-2">
-                        <SubmitButton disabled={state?.locked || false} />
+                        <Button 
+                            type="submit" 
+                            disabled={isLoading}
+                            className="w-full bg-red-700 hover:bg-red-600 h-12 text-base font-semibold shadow-lg shadow-red-900/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                            {isLoading ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <>
+                                    <Shield className="mr-2 w-5 h-5" />
+                                    Authenticate
+                                </>
+                            )}
+                        </Button>
                     </div>
                 </form>
 
-                <p className="text-center text-xs text-slate-600 mt-8 font-jakarta">
+                <p className="text-center text-xs text-red-900/80 mt-8 font-jakarta">
                     Unauthorized access attempts are monitored and logged.
                 </p>
             </Card>
