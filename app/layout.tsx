@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     apple: '/favicon.svg',
   },
   verification: {
-    google: 'LYhU1pYARLxsgcZu0rmJr2LeP4IFe-ZRMMl4cvaQKXc',
+    google: 'JOmPyZWiqF-Eb0mbv0aGBY2rWZWbclfD1-8U8n6qNXw',
   },
   openGraph: {
     type: 'website',
