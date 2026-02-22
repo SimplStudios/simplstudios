@@ -58,7 +58,7 @@ export function CreateUserDialog({
 
     startTransition(async () => {
       const res = await createExternalUserAction(formData)
-      setResult(res)
+      setResult(res as any)
       if (res.success) {
         router.refresh()
       }
