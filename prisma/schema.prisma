@@ -328,3 +328,64 @@ model VaultAccessCode {
 
   @@map("vault_access_codes")
 }
+
+// =====================
+// AUTH MANAGER - User Management for Connected Apps
+// =====================
+
+// Auth Manager: User bans tracked per external app
+model AuthUserBan {
+  id              String    @id @default(cuid())
+  databaseId      String    @map("database_id")
+  externalUserId  String    @map("external_user_id")
+  email           String?
+  reason          String
+  type            String    @default("permanent") // permanent, temporary
+  expiresAt       DateTime? @map("expires_at")
+  bannedBy        String    @default("Admin") @map("banned_by")
+  bannedAt        DateTime  @default(now()) @map("banned_at")
+  unbannedAt      DateTime? @map("unbanned_at")
+  isActive        Boolean   @default(true) @map("is_active")
+
+  @@index([databaseId, externalUserId])
+  @@index([databaseId, isActive])
+  @@map("auth_user_bans")
+}
+
+// Auth Manager: Tokens for password reset, email verification, magic links
+model AuthToken {
+  id              String    @id @default(cuid())
+  databaseId      String    @map("database_id")
+  externalUserId  String    @map("external_user_id")
+  email           String
+  token           String    @unique
+  type            String    // password_reset, email_verification, magic_link
+  expiresAt       DateTime  @map("expires_at")
+  usedAt          DateTime? @map("used_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@index([token])
+  @@index([databaseId, externalUserId])
+  @@map("auth_tokens")
+}
+
+// Auth Manager: Schema column mapping per connected database
+model AuthSchemaMapping {
+  id                    String  @id @default(cuid())
+  databaseId            String  @unique @map("database_id")
+  idColumn              String  @default("id") @map("id_column")
+  emailColumn           String  @default("email") @map("email_column")
+  nameColumn            String? @map("name_column")
+  usernameColumn        String? @map("username_column")
+  passwordColumn        String? @map("password_column")
+  avatarColumn          String? @map("avatar_column")
+  roleColumn            String? @map("role_column")
+  statusColumn          String? @map("status_column")
+  createdAtColumn       String? @map("created_at_column")
+  lastLoginColumn       String? @map("last_login_column")
+  emailVerifiedColumn   String? @map("email_verified_column")
+  sessionTable          String? @map("session_table")
+  sessionUserIdColumn   String? @map("session_user_id_column")
+
+  @@map("auth_schema_mappings")
+}

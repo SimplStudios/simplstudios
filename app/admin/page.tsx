@@ -2,7 +2,7 @@ import { prisma } from '@/lib/db'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Edit, Plus, ExternalLink, Trash2, BarChart3, Star, MessageSquare, Megaphone, FileText, Mail, AlertTriangle, Shield, Pin, PinOff } from 'lucide-react'
+import { Edit, Plus, ExternalLink, Trash2, BarChart3, Star, MessageSquare, Megaphone, FileText, Mail, AlertTriangle, Shield, Pin, PinOff, UserCog } from 'lucide-react'
 import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
@@ -132,7 +132,15 @@ export default async function AdminDashboard() {
                 </div>
 
                 {/* Additional Tools */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <Link href="/admin/auth" className="group">
+                        <Card className="p-4 bg-gradient-to-br from-cyan-900/30 to-blue-900/30 border-cyan-700/50 hover:border-cyan-500 transition-all group-hover:from-cyan-900/50 group-hover:to-blue-900/50">
+                            <div className="flex items-center gap-3">
+                                <UserCog className="w-5 h-5 text-cyan-400" />
+                                <span className="font-medium text-white font-jakarta group-hover:text-cyan-400 transition-colors">Auth Manager</span>
+                            </div>
+                        </Card>
+                    </Link>
                     <Link href="/admin/messages" className="group">
                         <Card className="p-4 bg-slate-900/50 border-slate-800 hover:border-cyan-500/50 transition-all group-hover:bg-slate-900">
                             <div className="flex items-center gap-3">
